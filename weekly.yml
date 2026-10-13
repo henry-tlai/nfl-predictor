@@ -1,0 +1,35 @@
+# Runs the weekly predictor on GitHub's servers and saves the new predictions file
+name: Weekly predictions
+
+on:
+  schedule:
+    - cron: "0 15 * * 2"   # every Tuesday at 15:00 UTC (about 8am Pacific), after Monday night's game
+  workflow_dispatch:        # also adds a "Run workflow" button so we can test it by hand
+
+permissions:
+  contents: write           # lets the job save the new CSV back to the repository
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # Only the packages the script needs (kept short on purpose)
+      - run: pip install nflreadpy pandas pyarrow scikit-learn scipy
+
+      # Build next week's predictions (skips if that week's file already exists)
+      - run: python src/weekly.py
+
+      # Commit the new file only if there is one
+      - name: Save predictions
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/predictions
+          git diff --staged --quiet || git commit -m "Add weekly predictions"
+          git push
