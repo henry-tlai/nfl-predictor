@@ -41,6 +41,8 @@ probabilities, plus an experimental against-the-spread (ATS) layer.
 - Rest days, split passing/rushing EPA, and gradient boosting did not improve results.
   Adding the model's features on top of the Vegas spread added nothing, so the market
   already prices in this information.
+- A quarterback-availability flag (starter listed Out or Doubtful) added essentially nothing
+  and did not improve the Vegas spread, so it was not added to the live pipeline.
 - ATS: the margin model picked the covering side about 48% of the time (break-even is
   52.4%), so it is tracked as an experiment, not betting advice.
 
@@ -59,8 +61,11 @@ probabilities, plus an experimental against-the-spread (ATS) layer.
     streamlit run app/streamlit_app.py
 
 ## Limitations
-- **No quarterback, injury, or weather data.** The model only sees team-level results, so
-  it can't react to a starter being out. This is the most likely reason it trails Vegas.
+- **Limited game-specific information.** The model sees team-level results, not weather or
+  injuries beyond a quarterback flag. A flag for the starting QB being out or doubtful was
+  tested and did not help, because the market already prices it in. Other injuries (such
+  as the offensive line) and weather were not tested, so it is unclear exactly what
+  separates the model from the Vegas line.
 - **Does not beat the Vegas line.** The backtest accuracy is about 2 points below the
   market, and adding the model's features on top of the spread added nothing.
 - **ATS layer shows no edge.** It picked the covering side about 48% of the time, below
@@ -79,4 +84,4 @@ probabilities, plus an experimental against-the-spread (ATS) layer.
   which may differ from the final lines used in the backtest.
 
 ## Next steps
-Quarterback and injury data, and tracking live results through the 2026 season.
+Test other injury and weather data, and track live results through the 2026 season.
