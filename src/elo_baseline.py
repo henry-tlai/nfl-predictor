@@ -24,7 +24,7 @@ def expected_home_win(home_elo, away_elo, hfa, neutral=False):
     return 1.0 / (1.0 + 10 ** (-diff / 400.0))
 
 
-def run_elo(games, k=20.0, hfa=48.0, regress=1 / 3, base=1500.0):
+def run_elo(games, k=20.0, hfa=30.0, regress=1 / 3, base=1500.0):
     """Walk through games in order; return (games with elo columns, final ratings).
 
     k:       how much a single game moves the ratings (bigger = reacts faster)
