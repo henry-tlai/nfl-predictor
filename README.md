@@ -9,6 +9,17 @@ probabilities, plus an experimental against-the-spread (ATS) layer.
 3. **Model:** logistic regression on Elo and EPA gaps
 4. **Evaluation:** walk-forward testing by season (train on the past, predict the next
    season), so the model never sees future games
+   
+## Tech stack
+| Layer | Tools |
+|---|---|
+| Language | Python |
+| Data source | nflverse (`nflreadpy`) |
+| Data processing | pandas, NumPy |
+| Modeling | scikit-learn (logistic regression, Ridge, gradient boosting), SciPy |
+| Dashboard | Streamlit |
+| Development | VS Code, Jupyter notebooks |
+| Version control | Git, GitHub |
 
 ## Results (2018-2025 backtest, ~2,100 games)
 | Model | Accuracy | Log loss |
