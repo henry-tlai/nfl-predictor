@@ -25,11 +25,14 @@ jobs:
       # Build next week's predictions (skips if that week's file already exists)
       - run: python src/weekly.py
 
+      # Score past predictions against real results then update data/scorecard.csv
+      - run: python src/score.py
+
       # Commit the new file only if there is one
       - name: Save predictions
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git add data/predictions
-          git diff --staged --quiet || git commit -m "Add weekly predictions"
+          git add data
+          git diff --staged --quiet || git commit -m "Update predictions and scorecard"
           git push
