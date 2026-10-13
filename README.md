@@ -3,6 +3,8 @@
 A machine learning pipeline that predicts NFL game winners with calibrated win
 probabilities, plus an experimental against-the-spread (ATS) layer.
 
+**[Live dashboard](https://nfl-weekly-predictor.streamlit.app/)**
+
 ## Approach
 1. **Baseline:** Elo ratings, benchmarked against "always pick home" and the Vegas line
 2. **Features:** rolling 6-game EPA per play for offense and defense (nflverse data)
