@@ -49,5 +49,25 @@ probabilities, plus an experimental against-the-spread (ATS) layer.
     pip install -r requirements.txt
     streamlit run app/streamlit_app.py
 
+## Limitations
+- **No quarterback, injury, or weather data.** The model only sees team-level results, so
+  it can't react to a starter being out. This is the most likely reason it trails Vegas.
+- **Does not beat the Vegas line.** The backtest accuracy is about 2 points below the
+  market, and adding the model's features on top of the spread added nothing.
+- **ATS layer shows no edge.** It picked the covering side 48.1% of the time, below the
+  52.4% break-even, so it is a tracked experiment and not betting advice.
+- **Small sample.** There are only ~270 games a season, which limits how much a model can
+  learn and makes small differences between models (under about 1 point) mostly noise.
+- **Early-season predictions are weaker.** Rolling form is based on few games in the first
+  weeks, so it leans more on Elo carried over from last season.
+- **Overconfident at the top.** Picks shown at 75%+ won about 76% of the time in the
+  backtest, versus 81% claimed on average.
+- **Approximate Vegas benchmark.** Vegas win probability is converted from the point
+  spread with a normal approximation, not taken from actual moneyline prices.
+- **Untuned settings.** Elo parameters (K factor, home-field value, season carryover) and
+  the 6-game rolling window use standard defaults and were not optimized.
+- **Manual weekly runs.** Predictions are produced by rerunning the notebook each week,
+  not on an automatic schedule.
+  
 ## Next steps
 Quarterback and injury data, a live scorecard, and automated weekly runs.
