@@ -1,27 +1,33 @@
 # Imports
 import glob
-import pandas as pd
+import os
 import numpy as np
+import pandas as pd
 # library that turns script into a webpage
 import streamlit as st
-import os
 
 # Page Settings: browser tab title, and full width of the window
 st.set_page_config(page_title="NFL Weekly Predictor", layout="wide")
 st.title("NFL Weekly Predictor: 2026")
 
-# Find the saved prediction files (one per week) and load the most recent one
-# sorted() puts them in week order, so the last one is the most recent week.
+# Find the saved prediction files (one per week, e.g. 2026_week_06.csv)
 files = sorted(glob.glob("data/predictions/2026_week_*.csv"))
 
-# If no files exist yet, it'll show a message rather than crash the page
+# If no files exist yet, show a message rather than crash the page
 if not files:
     st.warning("No prediction files found yet.")
     st.stop()
 
-# Loads the most recent weekly predictions
-latest = pd.read_csv(files[-1])
-week = int(latest["week"].iloc[0])
+# Map each week number to its file, e.g. {6: "data/predictions/2026_week_06.csv"}
+weeks = {int(os.path.basename(f).split("_week_")[1].split(".")[0]): f for f in files}
+week_list = sorted(weeks)
+
+# Dropdown to pick a week; it starts on the most recent one
+week = st.selectbox("Week", week_list, index=len(week_list) - 1,
+                    format_func=lambda w: f"Week {w}")
+
+# Load the chosen week's predictions
+latest = pd.read_csv(weeks[week])
 st.header(f"Week {week} predictions")
 
 # Our pick = the team with the higher win probability.
@@ -35,7 +41,6 @@ latest["Confidence"] = np.where(latest["home_win_prob"] > 0.5,
                                 latest["home_win_prob"], 1 - latest["home_win_prob"])
 
 # Show the columns that matter, one row per game
-# (uses the new "Our pick" and "Confidence" columns instead of raw home_win_prob)
 view = latest[["gameday", "away_team", "home_team", "Our pick", "Confidence",
                "vegas_prob", "spread_line"]]
 
@@ -50,7 +55,7 @@ st.dataframe(
     },
 )
 
-# Scorecards
+# Scorecard
 st.divider()
 st.header("Scorecard")
 
