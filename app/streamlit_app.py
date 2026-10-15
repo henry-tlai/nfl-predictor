@@ -59,24 +59,67 @@ st.dataframe(
 st.divider()
 st.header("Scorecard")
 
-# score.py creates this file once games have finished
-if not os.path.exists("data/scorecard.csv"):
+# The sample file only exists on your own computer (it is not uploaded to GitHub),
+# so this checkbox never appears on the live site
+use_sample = False
+if os.path.exists("data/sample/scorecard_sample.csv"):
+    use_sample = st.checkbox("Preview with sample data (weeks 1-5 backtest, not the real record)")
+
+# Show the sample file if the box is ticked, otherwise the real scorecard
+score_path = "data/sample/scorecard_sample.csv" if use_sample else "data/scorecard.csv"
+if use_sample:
+    st.warning("Sample data: retroactive picks for testing. This is not the live record.")
+
+# score.py creates the real file once games have finished
+if not os.path.exists(score_path):
     st.info("No results yet. The scorecard fills in after the first games finish.")
 else:
-    sc = pd.read_csv("data/scorecard.csv")
+    sc = pd.read_csv(score_path)
     total = len(sc)
 
-    # Our record: su_correct is True when the team we picked won
+    # Straight-up record: su_correct is True when the team we picked won
     ours = int(sc["su_correct"].sum())
 
     # Vegas record on the same games: it "picks" the home team if vegas_prob is above 50%
     home_won = sc["home_score"] > sc["away_score"]
-    vegas = int(((sc["vegas_prob"] > 0.5) == home_won).sum())
+    sc["vegas_correct"] = (sc["vegas_prob"] > 0.5) == home_won
+    vegas = int(sc["vegas_correct"].sum())
 
-    # Two side-by-side boxes showing wins-losses and the percentage
-    col1, col2 = st.columns(2)
+    # Against-the-spread record (pushes are tied games against the line, so they don't count)
+    ats_w = int((sc["ats_result"] == "win").sum())
+    ats_l = int((sc["ats_result"] == "loss").sum())
+    ats_p = int((sc["ats_result"] == "push").sum())
+    ats_text = f"{ats_w}-{ats_l}" + (f"-{ats_p}" if ats_p else "")
+    ats_pct = f"{ats_w / (ats_w + ats_l):.1%}" if (ats_w + ats_l) else "n/a"
+
+    # Three boxes: our record, Vegas on the same games, and our ATS record
+    col1, col2, col3 = st.columns(3)
     col1.metric("Our record", f"{ours}-{total - ours}", f"{ours / total:.1%}", delta_color="off")
     col2.metric("Vegas favorite", f"{vegas}-{total - vegas}", f"{vegas / total:.1%}", delta_color="off")
+    col3.metric("Against the spread", ats_text, ats_pct, delta_color="off")
+    st.caption("ATS break-even at standard -110 odds is 52.4%. The ATS record is an experiment, "
+               "not betting advice.")
 
-    # Game-by-game results underneath
-    st.dataframe(sc, use_container_width=True, hide_index=True)
+    # Week-by-week record
+    sc["is_win"] = sc["ats_result"] == "win"
+    sc["is_loss"] = sc["ats_result"] == "loss"
+    by_week = sc.groupby("week").agg(
+        games=("su_correct", "size"),
+        our_correct=("su_correct", "sum"),
+        vegas_correct=("vegas_correct", "sum"),
+        ats_wins=("is_win", "sum"),
+        ats_losses=("is_loss", "sum"),
+    ).reset_index()
+    by_week["our_pct"] = (by_week["our_correct"] / by_week["games"]).round(3)
+    st.subheader("By week")
+    st.dataframe(by_week, use_container_width=True, hide_index=True,
+                 column_config={"our_pct": st.column_config.NumberColumn("Our accuracy", format="percent")})
+
+    # Game-by-game results, newest week first
+    sc["Result"] = np.where(sc["su_correct"], "Correct", "Wrong")
+    st.subheader("Every game")
+    st.dataframe(
+        sc.sort_values(["week", "gameday"], ascending=False)[
+            ["week", "gameday", "away_team", "home_team", "our_pick", "winner",
+             "away_score", "home_score", "Result", "ats_lean", "ats_result"]],
+        use_container_width=True, hide_index=True)

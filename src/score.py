@@ -76,12 +76,23 @@ def main():
     by_week.columns = ["correct", "games"]
     print(by_week)
 
-    # 9. Save the game-by-game results so the dashboard can use them later
-    out = su[["week", "gameday", "away_team", "home_team", "home_win_prob", "vegas_prob",
-              "home_score", "away_score", "su_correct"]]
-    out.to_csv(os.path.join(ROOT, "data", "scorecard.csv"), index=False)
-    print("\nSaved game-by-game results to data/scorecard.csv")
+    # 9. Save game-by-game results for the dashboard (ties dropped: no winner to score)
+    out = done[done["margin"] != 0].copy()
+    out["our_pick"] = np.where(out["home_win_prob"] > 0.5, out["home_team"], out["away_team"])
+    out["winner"] = np.where(out["margin"] > 0, out["home_team"], out["away_team"])
+    out["su_correct"] = out["our_pick"] == out["winner"]  # did the team we picked win?
 
+    # ATS result: did the side we leaned toward cover the spread? (push = margin equals the spread)
+    home_covers = out["margin"] > out["spread_line"]
+    lean_home = out["ats_lean"] == out["home_team"]
+    out["ats_result"] = np.where(out["margin"] == out["spread_line"], "push",
+                                 np.where(lean_home == home_covers, "win", "loss"))
+
+    cols = ["week", "gameday", "away_team", "home_team", "our_pick", "winner",
+            "home_win_prob", "vegas_prob", "spread_line", "ats_lean", "ats_result",
+            "home_score", "away_score", "su_correct"]
+    out[cols].to_csv(os.path.join(ROOT, "data", "scorecard.csv"), index=False)
+    print("\nSaved game-by-game results to data/scorecard.csv")
 
 if __name__ == "__main__":
     main()
